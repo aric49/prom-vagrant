@@ -29,8 +29,9 @@ WORKDIR /promenade
 
 ENTRYPOINT /promenade/scripts/entrypoint.sh
 
-COPY images.tar cni.tgz helm kubelet /promenade/
+COPY genesis-images.tar cni.tgz helm kubelet /promenade/
 
 COPY env.sh kubelet.service.template /promenade/
-COPY scripts/ /promenade/scripts/
+COPY scripts/common/ /promenade/scripts/
+COPY scripts/genesis/ /promenade/scripts/
 COPY assets/ /promenade/assets/

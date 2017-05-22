@@ -19,7 +19,7 @@ set -ex
 #
 # Pre-load images for running offline
 #
-docker load -i ./images.tar
+docker load -i ./genesis-images.tar
 
 #
 # Setup CNI

@@ -21,10 +21,10 @@ HELM_VERSION := v2.3.1
 KUBERNETES_VERSION := v1.6.2
 
 NAMESPACE := quay.io/attcomdev
-REPO := promenade-genesis
+GENESIS_REPO := promenade-genesis
 TAG := dev
 
-IMAGES := \
+GENESIS_IMAGES := \
 	gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64:1.14.1 \
 	gcr.io/google_containers/k8s-dns-kube-dns-amd64:1.14.1 \
 	gcr.io/google_containers/k8s-dns-sidecar-amd64:1.14.1 \
@@ -47,11 +47,15 @@ IMAGES := \
 #-------#
 all: build
 
-build: cni.tgz env.sh helm images.tar kubelet
-	sudo docker build -t $(NAMESPACE)/$(REPO):$(TAG) .
+build: build-genesis
 
-push:
-	sudo docker push $(NAMESPACE)/$(REPO):$(TAG)
+push: push-genesis
+
+build-genesis: cni.tgz env.sh helm genesis-images.tar kubelet
+	sudo docker build -f Dockerfile.genesis -t $(NAMESPACE)/$(GENESIS_REPO):$(TAG) .
+
+push-genesis:
+	sudo docker push $(NAMESPACE)/$(GENESIS_REPO):$(TAG)
 
 cni.tgz:
 	wget https://github.com/containernetworking/cni/releases/download/$(CNI_VERSION)/cni-amd64-$(CNI_VERSION).tgz
@@ -72,11 +76,11 @@ helm:
 	rm -f helm-$(HELM_VERSION)-linux-amd64.tar.gz*
 	chmod +x helm
 
-images.tar:
-	for IMAGE in $(IMAGES); do \
+genesis-images.tar:
+	for IMAGE in $(GENESIS_IMAGES); do \
 		sudo docker pull $$IMAGE; \
 	done
-	sudo docker save -o images.tar $(IMAGES)
+	sudo docker save -o genesis-images.tar $(GENESIS_IMAGES)
 
 kubelet:
 	wget http://storage.googleapis.com/kubernetes-release/release/$(KUBERNETES_VERSION)/bin/linux/amd64/kubelet
@@ -88,8 +92,8 @@ clean:
 		env.sh \
 		helm \
 		helm-*-linux-amd64* \
-		images.tar \
+		genesis-images.tar \
 		kubelet \
 
 
-.PHONY : build clean push
+.PHONY : build build-genesis clean push push-genesis
