@@ -80,7 +80,7 @@ images.tar:
 
 kubelet:
 	wget http://storage.googleapis.com/kubernetes-release/release/$(KUBERNETES_VERSION)/bin/linux/amd64/kubelet
-	chmod +x helm
+	chmod +x kubelet
 
 clean:
 	rm -rf \
