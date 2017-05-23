@@ -134,7 +134,7 @@ clean:
 		env.sh \
 		helm \
 		helm-*-linux-amd64* \
-		genesis-images.tar \
+		*.tar \
 		kubelet \
 
 
