@@ -22,6 +22,7 @@ KUBERNETES_VERSION := v1.6.2
 
 NAMESPACE := quay.io/attcomdev
 GENESIS_REPO := promenade-genesis
+JOIN_REPO := promenade-join
 TAG := dev
 
 GENESIS_IMAGES := \
@@ -41,21 +42,56 @@ GENESIS_IMAGES := \
 	quay.io/coreos/kenc:48b6feceeee56c657ea9263f47b6ea091e8d3035 \
 	quay.io/coreos/pod-checkpointer:20cf8b9a6018731a0770192f30dfa7a1941521e3 \
 
+JOIN_IMAGES := \
+	gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64:1.14.1 \
+	gcr.io/google_containers/k8s-dns-kube-dns-amd64:1.14.1 \
+	gcr.io/google_containers/k8s-dns-sidecar-amd64:1.14.1 \
+	gcr.io/google_containers/pause-amd64:3.0 \
+	quay.io/calico/cni:v1.7.0 \
+	quay.io/calico/kube-policy-controller:v0.5.4 \
+	quay.io/calico/node:v1.1.3 \
+	quay.io/coreos/etcd-operator:v0.2.5 \
+	quay.io/coreos/etcd:v3.1.4 \
+	quay.io/coreos/etcd:v3.1.6 \
+	quay.io/coreos/flannel:v0.7.1 \
+	quay.io/coreos/hyperkube:$(KUBERNETES_VERSION)_coreos.0 \
+	quay.io/coreos/kenc:48b6feceeee56c657ea9263f47b6ea091e8d3035 \
+	quay.io/coreos/pod-checkpointer:20cf8b9a6018731a0770192f30dfa7a1941521e3 \
+
 
 #-------#
 # Rules #
 #-------#
 all: build
 
-build: build-genesis
+build: build-genesis build-join
 
-push: push-genesis
+push: push-genesis push-join
 
-build-genesis: cni.tgz env.sh helm genesis-images.tar kubelet
+save: save-genesis save-join
+
+genesis: build-genesis
+
+build-genesis: Dockerfile.genesis cni.tgz env.sh helm genesis-images.tar kubelet kubelet.service.template
 	sudo docker build -f Dockerfile.genesis -t $(NAMESPACE)/$(GENESIS_REPO):$(TAG) .
 
-push-genesis:
+push-genesis: build-genesis
 	sudo docker push $(NAMESPACE)/$(GENESIS_REPO):$(TAG)
+
+save-genesis: build-genesis
+	sudo docker save $(NAMESPACE)/$(GENESIS_REPO):$(TAG) > promenade-genesis.tar
+
+
+join: build-join
+
+build-join: Dockerfile.join join-images.tar kubelet.service.template
+	sudo docker build -f Dockerfile.join -t $(NAMESPACE)/$(JOIN_REPO):$(TAG) .
+
+push-join: build-join
+	sudo docker push $(NAMESPACE)/$(JOIN_REPO):$(TAG)
+
+save-join: build-join
+	sudo docker save $(NAMESPACE)/$(JOIN_REPO):$(TAG) > promenade-join.tar
 
 cni.tgz:
 	wget https://github.com/containernetworking/cni/releases/download/$(CNI_VERSION)/cni-amd64-$(CNI_VERSION).tgz
@@ -82,6 +118,12 @@ genesis-images.tar:
 	done
 	sudo docker save -o genesis-images.tar $(GENESIS_IMAGES)
 
+join-images.tar:
+	for IMAGE in $(JOIN_IMAGES); do \
+		sudo docker pull $$IMAGE; \
+	done
+	sudo docker save -o join-images.tar $(JOIN_IMAGES)
+
 kubelet:
 	wget http://storage.googleapis.com/kubernetes-release/release/$(KUBERNETES_VERSION)/bin/linux/amd64/kubelet
 	chmod +x kubelet
@@ -96,4 +138,4 @@ clean:
 		kubelet \
 
 
-.PHONY : build build-genesis clean push push-genesis
+.PHONY : build build-genesis build-join clean genesis join push push-genesis push-join

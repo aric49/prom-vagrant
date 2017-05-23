@@ -8,9 +8,12 @@ Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/xenial64"
   config.vm.box_check_update = false
 
+  config.vm.provision :file, source: "docker-daemon.json", destination: "/tmp/docker-daemon.json"
   config.vm.provision :file, source: "dnsmasq-kubernetes", destination: "/tmp/dnsmasq-kubernetes"
 
   config.vm.provision :shell, privileged: true, inline:<<EOS
+set -ex
+
 echo === Installing packages ===
 apt-get update -qq
 apt-get install -y -qq --no-install-recommends \
@@ -21,8 +24,14 @@ apt-get install -y -qq --no-install-recommends \
 echo === Setting up DNSMasq ===
 mv /tmp/dnsmasq-kubernetes /etc/dnsmasq.d/
 chown root:root /etc/dnsmasq.d/dnsmasq-kubernetes
-chmod 644 /etc/dnsmasq.d/dnsmasq-kubernetes
+chmod 444 /etc/dnsmasq.d/dnsmasq-kubernetes
 systemctl restart dnsmasq
+
+echo === Reconfiguring Docker ===
+mv /tmp/docker-daemon.json /etc/docker/daemon.json
+chown root:root /etc/docker/daemon.json
+chmod 444 /etc/docker/daemon.json
+systemctl restart docker
 
 echo === Done ===
 EOS

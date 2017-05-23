@@ -3,8 +3,8 @@
 To give this a try:
 
 ```
-vagrant up
-vagrant ssh
-cd /vagrant
-bash scripts/genesis.sh
+make save
+vagrant plugin install vagrant-hostmanager
+
+./test-install.sh
 ```

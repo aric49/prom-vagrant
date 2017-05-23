@@ -1,6 +1,6 @@
+/*.tar
 /cni.tgz
 /env.sh
 /helm
-/genesis-images.tar
 /kubelet
 /linux-amd64

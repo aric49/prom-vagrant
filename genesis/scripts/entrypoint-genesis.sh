@@ -16,4 +16,20 @@
 
 set -ex
 
-cp /tmp/target-hosts /target/etc/hosts
+source ./scripts/env.sh
+source ./scripts/func.sh
+
+validate_environment
+# XXX validate_genesis_assets
+
+docker load -i ./genesis-images.tar
+
+install_assets
+install_cni
+install_kubelet
+
+docker run --rm \
+    -v /etc/kubernetes:/etc/kubernetes \
+    quay.io/coreos/bootkube:${BOOTKUBE_VERSION} \
+    /bootkube start \
+        --asset-dir=/etc/kubernetes

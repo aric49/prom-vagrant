@@ -16,9 +16,12 @@
 
 set -ex
 
-docker run --rm \
-    -v /etc/kubernetes:/etc/kubernetes \
-    --add-host kubernetes:${NODE_HOSTNAME} \
-    quay.io/coreos/bootkube:${BOOTKUBE_VERSION} \
-    /bootkube start \
-        --asset-dir=/etc/kubernetes
+source ./scripts/env.sh
+source ./scripts/func.sh
+
+validate_environment
+# XXX validate_join_assets
+
+install_assets
+install_cni
+install_kubelet
