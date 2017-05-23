@@ -1,2 +1,8 @@
-/.vagrant
 /*.log
+/*.tar
+/.vagrant
+/cni.tgz
+/env.sh
+/helm
+/kubelet
+/linux-amd64
